@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 class Experiment() :
 
@@ -40,25 +41,45 @@ class Experiment() :
             # Simulate
             self.simulator.init_node()
 
-            if isit_train == False: self.debug_neuron_set(output_neuron_set)
+            self.debug_neuron_set(output_neuron_set)
 
             self.simulator.input(input_input)
-            #print(input_input)
-            #print(input_output)
             for i in range(self.run_max_num):
                 self.simulator.sampling()
                 if isit_train == True: self.simulator.input(input_output)
-                self.simulator.training()
+                self.simulator.training_save()
+
 
             # Validation
-            output_probability = self.get_debug_output_probability(output_neuron_set, output_state_space)
+            output_probability = self.get_debug_output_probability(output_neuron_set)
 
-            score = 1
-            for i in range(self.output_num) :
-                score *= output_probability[i][output_state[i]]
+            score_list = np.zeros(len(output_state_space))
+            for i in range(output_neuron_set) :
+                score_list += np.exp(output_probability[i][output_neuron_set[i]])
+
+            score =1
+            print(score_list)
+            for i in range(self.output_num):
+                score*= 0
+
+
             self.score_history.append(score)
 
+            self.simulator.training_by_value(score*1000)
+
         return 0
+
+    def view_score_history(self):
+        # Data for plotting
+        t = np.arange(0, len(self.score_history))
+
+        fig, ax = plt.subplots()
+        ax.plot(t, self.score_history)
+
+        ax.set(xlabel='epoch', ylabel='score',
+               title='score board')
+        #ax.grid()
+        plt.show()
 
     def make_env(self):
 
@@ -126,7 +147,9 @@ class Experiment() :
             for value in value_history :
                 output_probability += np.array(neuron.D[value].numpy())
 
-            output_probability_whole.append(output_probability/ sum(output_probability))
+            output_probability = output_probability
+            output_probability = output_probability/ sum(output_probability)
+            output_probability_whole.append(output_probability)
 
         return output_probability_whole
 

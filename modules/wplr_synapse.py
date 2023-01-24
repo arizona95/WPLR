@@ -19,20 +19,26 @@ class WPLRSynapse(BaseModule) :
         self.weight = nn.Parameter(torch.ones((self.pre_neuron.space_num, self.post_neuron.space_num)))
         self.weight.requires_grad = False
         self.sleep = True
-        self.value = 100
+        self.training_value = nn.Parameter(torch.zeros((self.pre_neuron.space_num, self.post_neuron.space_num)))
+        self.training_value.requires_grad = False
         self.condition = 1 if condition is True else -1
 
-    def hebb_training(self):
+    def training_save(self):
         if self.sleep == False :
             x = self.pre_neuron.X
             y = self.post_neuron.X
             dw = torch.matmul(self.pre_neuron.D[x].reshape(-1,1), self.post_neuron.D[y].reshape(-1,1).T)
-            self.weight += dw * self.value
-            self.weight *= 1-args.forget_rate
-            self.weight += args.forget_rate
+            self.training_value  += dw
 
         self.sleep = True
         return
+
+    def training_by_value(self, value=1):
+        self.weight += self.training_value * value
+        self.weight *= 1-args.forget_rate
+        self.weight += args.forget_rate
+        self.training_value= nn.Parameter(torch.zeros((self.pre_neuron.space_num, self.post_neuron.space_num)))
+        self.training_value.requires_grad = False
 
     def propagate_probability(self):
         if self.pre_neuron.sleep == False :

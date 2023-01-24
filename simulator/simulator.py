@@ -51,9 +51,14 @@ class Simulator() :
         for neuron_name, neuron in self.neurons.items():
             neuron.sampling()
 
-    def training(self):
+
+    def training_save(self):
         for synapse_name, synapse in self.synapses.items():
-            synapse.hebb_training()
+            synapse.training_save()
+
+    def training_by_value(self, value=1):
+        for synapse_name, synapse in self.synapses.items():
+            synapse.training_by_value(value)
 
     def input(self, input_dict):
         for neuron_name, value in input_dict.items() :
